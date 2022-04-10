@@ -2,23 +2,22 @@ var userForm = $("#input-form");
 var userInput = $("#user-search");
 var currentDate = moment().format("(MM/DD/YYYY)");
 
-const dailyResults = $("#daily-results");
+var dailyResults = $("#daily-results");
 const forecastResults = $("#forecast-results");
 
 const apiKey = "432a869893a494f470cf1cd147c88c43";
 var weatherTest = "https://api.openweathermap.org/data/2.5/weather?q=San%20Francisco&units=imperial&appid=432a869893a494f470cf1cd147c88c43";
 // https://api.openweathermap.org/data/2.5/weather?q=San%20Francisco&units=imperial&appid=432a869893a494f470cf1cd147c88c43
 
-var cardGroup;
-var cardInfoName;
-var iconTag;
-var cardInfoTemp;
-var cardInfoHumidity;
-var cardInfoWindSpeed;
-var cardInfoUvIndex;
+// GENERATE CONTENT ONCE WITH LINK
+// ONCE CONTENT IS GENERATED
+    // EVERY OTHER SEARCH AFTER WILL REPLACE THOSE VARIABLES INSTEAD OF GENERATE
+// GET SEARCH, BUTTON TO WORK INSTEAD OF JUST PRESSING ENTER
 
+
+// Gets the information from the web link
 function getWeatherAPI (apiInputLink) {
-    console.log("Contacting openweathermap.org...")
+    console.log("Contacting " + apiInputLink + "...")
     fetch(apiInputLink)
     .then(function (response) {
         return response.json();
@@ -35,6 +34,7 @@ function getWeatherAPI (apiInputLink) {
         })
 }
 
+// Gets the search information from the user then sends it to the getWeather function
 function getSearchInput(event) {
     // Get input from user and push it into the getWeatherAPI function
     // Get input from user
@@ -54,40 +54,44 @@ function getSearchInput(event) {
     getWeatherAPI(link);
 }
 
+// Generates content upon recieving the search results input
 function showCardResults(input, data) {
     // When receiving proper results:
     if (input) {
         // Then print results and return
         console.log("User input was truthy, and valid");
         console.log(data.name);
+        // clear old elements before generating new ones :ok_hand:
+        dailyResults.empty();
 
         // CREATE CARD DIV, APPEND ALL NEW DIVS TO THIS
-        cardGroup = $("<div class='bg-light text-dark card my-3 p-3'>");
+        var cardGroup = $("<div class='bg-light text-dark card my-3 p-3'>");
             // NAME
-            cardInfoName = $("<h3>");
-            iconTag = $("<img src='" + "http://openweathermap.org/img/w/" + data.weather[0].icon + ".png'>");
+            var cardInfoName = $("<h3>");
+            var iconTag = $("<img src='" + "http://openweathermap.org/img/w/" + data.weather[0].icon + ".png'>");
             cardInfoName.text(data.name + " " + currentDate);
             iconTag.appendTo(cardInfoName);
             cardInfoName.appendTo(cardGroup);
             // TEMP
-            cardInfoTemp = $("<p>");
+            var cardInfoTemp = $("<p>");
             cardInfoTemp.text("Temperature: " + data.main.temp + "°F");
             cardInfoTemp.appendTo(cardGroup);
             // HUMIDITY
-            cardInfoHumidity = $("<p>");
+            var cardInfoHumidity = $("<p>");
             cardInfoHumidity.text("Humidity: " + data.main.humidity + "%");
             cardInfoHumidity.appendTo(cardGroup);
             // WIND SPEED
-            cardInfoWindSpeed = $("<p>");
+            var cardInfoWindSpeed = $("<p>");
             cardInfoWindSpeed.text("Wind Speed: " + data.wind.speed + " MPH");
             cardInfoWindSpeed.appendTo(cardGroup);
             // UV INDEX
-            cardInfoUvIndex = $("<p>");
+            var cardInfoUvIndex = $("<p>");
             cardInfoUvIndex.text("UV Index: ");
             cardInfoUvIndex.appendTo(cardGroup);
         // NOW THAT WE CREATED AND APPENDED THEM TO THE MAIN CARD...
         // APPEND THAT CARD TO THE RESULTS DIV
         cardGroup.appendTo(dailyResults);
+
     } else {
         console.log("Generating error message");
     
@@ -99,5 +103,5 @@ function showCardResults(input, data) {
     }
 }
 
-// console.log(getWeatherAPI(weatherTest));
-userForm.on('submit', getSearchInput);
+// Triggers the search function upon search activation
+userForm.on('submit',getSearchInput);
