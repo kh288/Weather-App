@@ -1,5 +1,6 @@
 var userForm = $("#input-form");
 var userInput = $("#user-search");
+var searchHistory = $("#search-history");
 var currentDate = moment().format("(MM/DD/YYYY)");
 
 var locations = [];
@@ -8,8 +9,6 @@ var dailyResults = $("#daily-results");
 const forecastResults = $("#forecast-results");
 
 const apiKey = "432a869893a494f470cf1cd147c88c43";
-var weatherTest = "https://api.openweathermap.org/data/2.5/weather?q=San%20Francisco&units=imperial&appid=432a869893a494f470cf1cd147c88c43";
-// https://api.openweathermap.org/data/2.5/weather?q=San%20Francisco&units=imperial&appid=432a869893a494f470cf1cd147c88c43
 
 // GENERATE CONTENT ONCE WITH LINK
 // ONCE CONTENT IS GENERATED
@@ -66,7 +65,7 @@ function showCardResults(input, data) {
         dailyResults.empty();
 
         // CREATE CARD DIV, APPEND ALL NEW DIVS TO THIS
-        var cardGroup = $("<div class='bg-light text-dark card my-3 p-3'>");
+        var cardGroup = $("<div class='bg-white text-dark card my-3 p-3'>");
             // NAME
             var cardInfoName = $("<h3>");
             // INSERT CARDINFO NAME INTO A FUNCTION THAT GRABS THIS AS A SEARCH FOR THE FUTURE.
@@ -97,6 +96,7 @@ function showCardResults(input, data) {
         // NOW THAT WE CREATED AND APPENDED THEM TO THE MAIN CARD...
         // APPEND THAT CARD TO THE RESULTS DIV
         cardGroup.appendTo(dailyResults);
+        showHistory();
 
     } else {
         console.log("Generating error message");
@@ -116,14 +116,34 @@ function saveSearchLocal(previousSearch) {
 
 function loadSearchLocal() {
     if (localStorage.getItem("locations")) {
-        // IF THERES A VALUE HERE, RESUME COUNTING
+        // IF THERES A VALUE HERE, LOAD INFO INTO locations variable
         locations = localStorage.getItem("locations")
+        locations = locations.split(",");
         return;
     }
     // localStorage.getItem().getLength();
 }
 
-loadSearchLocal();
+function showHistory() {
+    if (locations[0]) {
+        console.log("LOCATIONS HAS ITEMS");
+        searchHistory.empty();
+        for(i = 0; i < locations.length; i++) {
+            var cardGroup = $("<div class='bg-white text-center text-dark card mb-1 p-2'>");
+            var cardInfoName = $("<h5>");
+            cardInfoName.text(locations[i]);
+            cardInfoName.appendTo(cardGroup);
 
+            cardGroup.appendTo(searchHistory);
+            // append to searchHistory when done creating item.
+
+        }
+    } else{
+        console.log("LOCATIONS IS EMPTY")
+    }
+}
+
+loadSearchLocal();
+showHistory();
 // Triggers the search function upon search activation
 userForm.on('submit',getSearchInput);
