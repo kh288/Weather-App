@@ -2,6 +2,8 @@ var userForm = $("#input-form");
 var userInput = $("#user-search");
 var currentDate = moment().format("(MM/DD/YYYY)");
 
+var locations = [];
+
 var dailyResults = $("#daily-results");
 const forecastResults = $("#forecast-results");
 
@@ -13,7 +15,6 @@ var weatherTest = "https://api.openweathermap.org/data/2.5/weather?q=San%20Franc
 // ONCE CONTENT IS GENERATED
     // EVERY OTHER SEARCH AFTER WILL REPLACE THOSE VARIABLES INSTEAD OF GENERATE
 // GET SEARCH, BUTTON TO WORK INSTEAD OF JUST PRESSING ENTER
-
 
 // Gets the information from the web link
 function getWeatherAPI (apiInputLink) {
@@ -68,6 +69,11 @@ function showCardResults(input, data) {
         var cardGroup = $("<div class='bg-light text-dark card my-3 p-3'>");
             // NAME
             var cardInfoName = $("<h3>");
+            // INSERT CARDINFO NAME INTO A FUNCTION THAT GRABS THIS AS A SEARCH FOR THE FUTURE.
+            if (locations.includes(data.name) === false) {
+                saveSearchLocal(data.name);
+                console.log("SAVING: " + data.name);
+            }
             var iconTag = $("<img src='" + "http://openweathermap.org/img/w/" + data.weather[0].icon + ".png'>");
             cardInfoName.text(data.name + " " + currentDate);
             iconTag.appendTo(cardInfoName);
@@ -102,6 +108,22 @@ function showCardResults(input, data) {
         cardGroup.appendTo(dailyResults);
     }
 }
+
+function saveSearchLocal(previousSearch) {
+    locations.push(previousSearch);
+    localStorage.setItem("locations", locations);
+}
+
+function loadSearchLocal() {
+    if (localStorage.getItem("locations")) {
+        // IF THERES A VALUE HERE, RESUME COUNTING
+        locations = localStorage.getItem("locations")
+        return;
+    }
+    // localStorage.getItem().getLength();
+}
+
+loadSearchLocal();
 
 // Triggers the search function upon search activation
 userForm.on('submit',getSearchInput);
