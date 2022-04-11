@@ -7,6 +7,7 @@ var locations = [];
 
 var dailyResults = $("#daily-results");
 const forecastResults = $("#forecast-results");
+var clearButton = $("#button-clear");
 
 const apiKey = "432a869893a494f470cf1cd147c88c43";
 
@@ -66,13 +67,22 @@ function showCardResults(input, data) {
 
         // CREATE CARD DIV, APPEND ALL NEW DIVS TO THIS
         var cardGroup = $("<div class='bg-white text-dark card my-3 p-3'>");
-            // NAME
             var cardInfoName = $("<h3>");
-            // INSERT CARDINFO NAME INTO A FUNCTION THAT GRABS THIS AS A SEARCH FOR THE FUTURE.
-            if (locations.includes(data.name) === false) {
-                saveSearchLocal(data.name);
-                console.log("SAVING: " + data.name);
+
+            if(locations.includes(data.name)) {
+                // IF ITEM IS ALREADY IN LOCATIONS ARRAY THEN WE MOVE IT TO THE TOP
+                locations.splice (locations.indexOf(data.name), 1); // removes item 
+                locations.unshift(data.name); // places it on top
+                // Save current array into local storage
+                saveSearchLocal();
+            } else {
+                // If it doesn't include that element, we put it in the back.
+                locations.push(data.name);
+
+                // Save current array into local storage
+                saveSearchLocal();
             }
+
             var iconTag = $("<img src='" + "http://openweathermap.org/img/w/" + data.weather[0].icon + ".png'>");
             cardInfoName.text(data.name + " " + currentDate);
             iconTag.appendTo(cardInfoName);
@@ -96,8 +106,8 @@ function showCardResults(input, data) {
         // NOW THAT WE CREATED AND APPENDED THEM TO THE MAIN CARD...
         // APPEND THAT CARD TO THE RESULTS DIV
         cardGroup.appendTo(dailyResults);
+        loadSearchLocal();
         showHistory();
-
     } else {
         console.log("Generating error message");
     
@@ -108,42 +118,47 @@ function showCardResults(input, data) {
         cardGroup.appendTo(dailyResults);
     }
 }
-
-function saveSearchLocal(previousSearch) {
-    locations.push(previousSearch);
+// Saves from locations array to local storage
+function saveSearchLocal() {
     localStorage.setItem("locations", locations);
+    loadSearchLocal();
 }
-
+// Loads items from localstorage to locations array
 function loadSearchLocal() {
     if (localStorage.getItem("locations")) {
         // IF THERES A VALUE HERE, LOAD INFO INTO locations variable
         locations = localStorage.getItem("locations")
         locations = locations.split(",");
-        return;
     }
-    // localStorage.getItem().getLength();
 }
 
 function showHistory() {
     if (locations[0]) {
         console.log("LOCATIONS HAS ITEMS");
         searchHistory.empty();
-        for(i = 0; i < locations.length; i++) {
-            var cardGroup = $("<div class='bg-white text-center text-dark card mb-1 p-2'>");
-            var cardInfoName = $("<h5>");
+        // ITERATE THROUGH LOCATIONS VARIABLE AND MAKE BUTTONS FOR EACH INSTANCE IN THE ARRAY
+        // for(i = locations.length - 1 ; i >= 0; i--) {
+        // }
+        for (i = 0; i < locations.length; i++) {
+            var cardForm = $("<form id='"+ locations[i] +"' class='input-group'>");
+            var cardInfoName = $("<p class='input-group btn btn-light mb-1 p-2'>");
             cardInfoName.text(locations[i]);
-            cardInfoName.appendTo(cardGroup);
-
-            cardGroup.appendTo(searchHistory);
-            // append to searchHistory when done creating item.
-
+            cardInfoName.appendTo(cardForm);
+            cardForm.appendTo(searchHistory);
+            // append to searchHistory when done creating item.\
         }
-    } else{
-        console.log("LOCATIONS IS EMPTY")
     }
+}
+
+function clearItems() {
+    locations = [];
+    localStorage.clear();
+    searchHistory.empty();
 }
 
 loadSearchLocal();
 showHistory();
 // Triggers the search function upon search activation
+// this.$("form").text.on("click",getSearchInput);
 userForm.on('submit',getSearchInput);
+clearButton.on('click',clearItems);
