@@ -1,15 +1,22 @@
 var userForm = $("#input-form");
 var userInput = $("#user-search");
+var searchButton = $("#search-button");
 var searchHistory = $("#search-history");
 var currentDate = moment().format("(MM/DD/YYYY)");
 
 var locations = [];
 
-var dailyResults = $("#daily-results");
+const dailyResults = $("#daily-results");
 const forecastResults = $("#forecast-results");
 var clearButton = $("#button-clear");
 
+// var lat = 0;
+// var lon = 0;
+// var uvi = 0;
+
 const apiKey = "432a869893a494f470cf1cd147c88c43";
+
+// https://api.openweathermap.org/data/2.5/onecall?lat={lat}&lon={lon}&exclude={part}&appid={API key}
 
 // GENERATE CONTENT ONCE WITH LINK
 // ONCE CONTENT IS GENERATED
@@ -18,21 +25,55 @@ const apiKey = "432a869893a494f470cf1cd147c88c43";
 
 // Gets the information from the web link
 function getWeatherAPI (apiInputLink) {
-    console.log("Contacting " + apiInputLink + "...")
+    console.log("Contacting " + apiInputLink + "...");
     fetch(apiInputLink)
     .then(function (response) {
         return response.json();
-    }).then(function(data){
-        console.log(data);
+    })
+    .then(function(data){
+    if (data.cod !== '404') {
+        // Read forecast data with lat/lon
+        var foreCastLink = "https://api.openweathermap.org/data/2.5/onecall?lat="+data.coord.lat+"&lon="+data.coord.lon+"&units=imperial&exclude=alerts,hourly,minutely,current&appid="+apiKey;
+        fetch(foreCastLink)
+        .then(function(response2) {
+            return response2.json();
+        })
+        .then(function(data2){ 
             if (data.cod !== '404') {
-                console.log("Data is truthy!");
-                showCardResults(true, data); // SHOW CARD RESULTS WITH ACTUAL RESULTS
+                console.log(data);
+                console.log(data2);
+                showCardResults(true, data, data2);
+                showForeCastResults(data2);
                 return;
             }
-            console.log("Invalid Response");
-            showCardResults(false); // SHOW CARD RESULTS WITH AN ERROR
-            return;
         })
+    } else {
+        // IF INPUT IS BAD THEN DO THIS:
+        showCardResults(false, 0, 0); // SHOW CARD RESULTS WITH AN ERROR
+        return;
+    }
+    })
+}
+
+function getForecastAPI (apiInputLink) {
+    fetch(apiInputLink)
+    .then(function (response) {
+        return response.json();
+    })
+    .then(function(data) {
+        console.log(data);
+        console.log("Day 0:" + data.daily[0].uvi);
+        return data;
+    })
+}
+
+function getForecast(lat, lon) {
+    // var foreCastLink = https://api.openweathermap.org/data/2.5/onecall?lat={lat}&lon={lon}&units=imperial&appid={API key}
+    var foreCastLink = "https://api.openweathermap.org/data/2.5/onecall?lat="+lat+"&lon="+lon+"&units=imperial&exclude=alerts,hourly,minutely,current&appid="+apiKey;
+    // console.log("FORECAST LINK INFORMATION: " + foreCastLink);
+    // getForecastAPI(foreCastLink);
+    return foreCastLink;
+    // return ;
 }
 
 // Gets the search information from the user then sends it to the getWeather function
@@ -41,27 +82,23 @@ function getSearchInput(event) {
     // Get input from user
     event.preventDefault();
     console.log("Successfully submitted user input");
-    // userinput.splice(" ", "%20");
-    // var input = userInput.splice(" ", "%20");
     var input = userInput.val();
-    // input = input.splice(" ", "%20");
-
-    // var link = "https://api.openweathermap.org/data/2.5/weather?q=" + input + "&units=imperial&appid=" + apiKey;
-    // var geolink = "http://api.openweathermap.org/geo/1.0/direct?q={city name},{state code},{country code}&appid={API key}";
-    // var foreCastLink = https://api.openweathermap.org/data/2.5/onecall?lat={lat}&lon={lon}&exclude={part}&appid={API key}
-    
     var link = "https://api.openweathermap.org/data/2.5/weather?q=" + input + "&units=imperial&appid=" + apiKey;
     
     getWeatherAPI(link);
 }
 
 // Generates content upon recieving the search results input
-function showCardResults(input, data) {
+function showCardResults(input, data, data2) {
     // When receiving proper results:
-    if (input) {
+
+    // var forecast = getForecastAPI(getForecast(lat, lon));
+    // console.log("FORECAST OUTPUT: " + forecast);
+
+    if (input && data !== 0) {
         // Then print results and return
-        console.log("User input was truthy, and valid");
-        console.log(data.name);
+        // console.log("User input was truthy, and valid");
+        // console.log(data.name);
         // clear old elements before generating new ones :ok_hand:
         dailyResults.empty();
 
@@ -101,7 +138,7 @@ function showCardResults(input, data) {
             cardInfoWindSpeed.appendTo(cardGroup);
             // UV INDEX
             var cardInfoUvIndex = $("<p>");
-            cardInfoUvIndex.text("UV Index: ");
+            cardInfoUvIndex.text("UV Index: " + data2.daily[0].uvi);
             cardInfoUvIndex.appendTo(cardGroup);
         // NOW THAT WE CREATED AND APPENDED THEM TO THE MAIN CARD...
         // APPEND THAT CARD TO THE RESULTS DIV
@@ -118,6 +155,39 @@ function showCardResults(input, data) {
         cardGroup.appendTo(dailyResults);
     }
 }
+
+function showForeCastResults(data) {
+    console.log("DATA I CARE ABOUT RN:");
+    console.log(data);
+
+    forecastResults.empty();
+    $("#forecast-title").attr("style","display: initial");
+    // var today = moment().format("(MM/DD/YYYY)");
+
+    // Look at the weather at the NEXT 5 days
+    for (i = 1; i <= 5; i++) {
+        var cardGroup = $("<div class='bg-primary text-light card my-3 p-3'>");
+            var date = $("<h6>");
+            var time = moment().add(i, 'days');
+            date.text(time.format("(MM/DD/YYYY)"));
+            date.appendTo(cardGroup);
+    
+            var ico = $("<img style='width: min-content' src='" + "http://openweathermap.org/img/w/" + data.daily[i].weather[0].icon + ".png'>");
+            ico.appendTo(cardGroup);
+    
+            var temp = $("<p>");
+            temp.text("Temp: " + data.daily[i].temp.day);
+            temp.appendTo(cardGroup);
+    
+            var hum = $("<p>");
+            hum.text("Humidity: " + data.daily[i].humidity);
+            hum.appendTo(cardGroup);
+
+            cardGroup.appendTo(forecastResults);
+    }
+    return;
+}
+
 // Saves from locations array to local storage
 function saveSearchLocal() {
     localStorage.setItem("locations", locations);
@@ -141,7 +211,7 @@ function showHistory() {
         // }
         for (i = 0; i < locations.length; i++) {
             var cardForm = $("<form id='"+ locations[i] +"' class='input-group'>");
-            var cardInfoName = $("<p class='input-group btn btn-light mb-1 p-2'>");
+            var cardInfoName = $("<p class='input-group btn btn-light bg-white mb-1 p-2'>");
             cardInfoName.text(locations[i]);
             cardInfoName.appendTo(cardForm);
             cardForm.appendTo(searchHistory);
@@ -159,6 +229,7 @@ function clearItems() {
 loadSearchLocal();
 showHistory();
 // Triggers the search function upon search activation
-// this.$("form").text.on("click",getSearchInput);
+
+// $(".input-group").on("click",getSearchInput);
 userForm.on('submit',getSearchInput);
 clearButton.on('click',clearItems);
