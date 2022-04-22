@@ -32,4 +32,4 @@ https://kh288.github.io/Weather-App/
 
 ## License
 
-&copy; 2022 Kevin Hernandez
+&copy; 2022 Kevin Hernandez, All Rights Reserved. Licensed under the [MIT License](./LICENSE)
